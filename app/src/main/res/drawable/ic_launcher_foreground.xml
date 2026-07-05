@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 자물쇠 몸통 -->
+    <path
+        android:fillColor="#111111"
+        android:pathData="M38,50 h32 a7,7 0 0,1 7,7 v20 a7,7 0 0,1 -7,7 h-32 a7,7 0 0,1 -7,-7 v-20 a7,7 0 0,1 7,-7 z" />
+    <!-- 자물쇠 고리 -->
+    <path
+        android:fillColor="#111111"
+        android:pathData="M54,30 a17,17 0 0,1 17,17 v5 h-7 v-5 a10,10 0 0,0 -20,0 v5 h-7 v-5 a17,17 0 0,1 17,-17 z" />
+    <!-- 열쇠구멍 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,60 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M52,66 h4 v8 h-4 z" />
+</vector>

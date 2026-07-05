@@ -1,0 +1,10 @@
+{
+  "title": "예시 시간표",
+  "blocks": [
+    {"start": "09:00", "end": "12:00", "content": "오전 공부", "type": "국어"},
+    {"start": "12:00", "end": "13:00", "content": "점심", "type": "식사"},
+    {"start": "13:00", "end": "17:00", "content": "오후 공부", "type": "수학"},
+    {"start": "17:00", "end": "18:00", "content": "저녁", "type": "식사"},
+    {"start": "18:00", "end": "22:00", "content": "저녁 공부", "type": "영어"}
+  ]
+}

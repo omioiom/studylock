@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 진행 중 일정 알림(확장) 커스텀 뷰. 색상은 코드에서 테마에 맞게 설정. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="4dp"
+    android:paddingVertical="4dp">
+
+    <TextView
+        android:id="@+id/notif_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/notif_sub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:textSize="13sp" />
+
+    <ProgressBar
+        android:id="@+id/notif_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="11dp"
+        android:max="1000" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/notif_btn_timetable"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingVertical="6dp"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:maxHeight="24dp"
+            android:src="@drawable/ic_sched_timetable" />
+
+        <ImageView
+            android:id="@+id/notif_btn_focus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingVertical="6dp"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:maxHeight="24dp"
+            android:src="@drawable/ic_sched_focus" />
+
+        <ImageView
+            android:id="@+id/notif_btn_screentime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingVertical="6dp"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:maxHeight="24dp"
+            android:src="@drawable/ic_sched_screentime" />
+
+        <ImageView
+            android:id="@+id/notif_btn_settings"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingVertical="6dp"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:maxHeight="24dp"
+            android:src="@drawable/ic_sched_settings" />
+    </LinearLayout>
+</LinearLayout>

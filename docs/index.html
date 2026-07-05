@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>StudyLock — 원클릭 설치</title>
+<meta name="description" content="브라우저에서 USB로 연결해 StudyLock(기기관리자 잠금)을 원클릭 설치하는 오픈소스 도구." />
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<meta name="theme-color" content="#111214" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="StudyLock — 절대 안 뚫리는 스터디 잠금앱" />
+<meta property="og:description" content="USB 연결 원클릭으로 기기관리자 잠금 설치 · 소스 공개(CC BY-NC-ND, 개인·비상업)" />
+<meta property="og:image" content="https://roaring-kataifi-d3bfb6.netlify.app/og.png" />
+<meta property="og:url" content="https://roaring-kataifi-d3bfb6.netlify.app/" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="StudyLock — 절대 안 뚫리는 스터디 잠금앱" />
+<meta name="twitter:image" content="https://roaring-kataifi-d3bfb6.netlify.app/og.png" />
+<style>
+  :root{
+    --ink:#111214; --paper:#ffffff; --gray:#8a8a8a; --line:#e8e8e8;
+    --field:#f6f6f6; --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink); background:var(--paper); line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:0 22px;}
+  code,.mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;}
+
+  /* top bar */
+  .topbar{border-bottom:1px solid var(--line);}
+  .topbar .wrap{display:flex; align-items:center; gap:14px; height:60px;}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.02em; font-size:18px;}
+  .lockmark{width:22px;height:22px;display:block;}
+  .topbar .spacer{flex:1;}
+  .pill{font-size:12px; border:1px solid var(--line); border-radius:999px; padding:5px 11px; color:var(--gray); text-decoration:none;}
+  .pill.solid{background:var(--ink); color:#fff; border-color:var(--ink); font-weight:600;}
+
+  /* hero */
+  .hero{padding:64px 0 30px; text-align:center;}
+  .hero h1{font-size:44px; line-height:1.1; letter-spacing:-.03em; margin:0 0 16px; font-weight:850;}
+  .hero p{font-size:17px; color:var(--gray); margin:0 auto; max-width:520px;}
+  .badges{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:22px;}
+  .badge{font-size:12px; border:1px solid var(--line); border-radius:999px; padding:6px 12px; color:var(--ink); text-decoration:none;}
+  .badge b{font-weight:700;}
+
+  section{padding:34px 0; border-top:1px solid var(--line);}
+  h2{font-size:22px; letter-spacing:-.02em; margin:0 0 6px;}
+  .sub{color:var(--gray); margin:0 0 22px; font-size:15px;}
+
+  /* requirement grid */
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media(max-width:560px){.grid{grid-template-columns:1fr;}}
+  .card{border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px;}
+  .card h3{margin:0 0 4px; font-size:15px;}
+  .card p{margin:0; color:var(--gray); font-size:14px;}
+
+  /* steps */
+  ol.steps{list-style:none; counter-reset:s; margin:0; padding:0;}
+  ol.steps li{counter-increment:s; position:relative; padding:12px 0 12px 46px; border-bottom:1px solid var(--line);}
+  ol.steps li:last-child{border-bottom:0;}
+  ol.steps li::before{content:counter(s); position:absolute; left:0; top:12px; width:30px; height:30px;
+    background:var(--ink); color:#fff; border-radius:9px; display:grid; place-items:center; font-size:14px; font-weight:700;}
+  ol.steps b{font-weight:700;}
+  .hint{color:var(--gray); font-size:13px;}
+
+  /* installer */
+  .installer{border:1px solid var(--line); border-radius:20px; padding:22px; background:#fff;}
+  .check{display:flex; align-items:flex-start; gap:11px; padding:9px 0; cursor:pointer; user-select:none;}
+  .check input{margin-top:3px; width:17px; height:17px; accent-color:#111;}
+  .check span{font-size:14px;}
+  .check small{display:block; color:var(--gray); font-size:12px;}
+
+  .acct{margin:6px 0 2px; border:1px solid var(--line); border-radius:12px; background:var(--field); padding:0 14px;}
+  .acct summary{cursor:pointer; font-size:13px; font-weight:700; padding:12px 0; list-style:none;}
+  .acct summary::-webkit-details-marker{display:none;}
+  .acct summary::before{content:"▸ "; color:var(--gray);}
+  .acct[open] summary::before{content:"▾ ";}
+  .acct ol{margin:0 0 10px; padding-left:20px; font-size:13px; line-height:1.9;}
+  .acct .hint{margin:0 0 12px;}
+
+  .btnrow{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;}
+  button.btn{font:inherit; font-weight:700; border-radius:13px; padding:14px 20px; cursor:pointer; border:1px solid var(--ink);}
+  button.btn.primary{background:var(--ink); color:#fff;}
+  button.btn.ghost{background:#fff; color:var(--ink);}
+  button.btn:disabled{opacity:.35; cursor:not-allowed;}
+
+  .status{margin-top:16px; border:1px solid var(--line); border-radius:12px; background:var(--field); padding:12px 14px; display:none;}
+  .status.show{display:block;}
+  .log{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:12.5px; white-space:pre-wrap; margin:0; color:#333; max-height:260px; overflow:auto;}
+  .ln-ok{color:#111; font-weight:600;}
+  .ln-err{color:#111; font-weight:700; text-decoration:underline;}
+  .ln-dim{color:var(--gray);}
+
+  .cmd{position:relative; background:var(--field); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:10px 0;}
+  .cmd pre{margin:0; font-size:13px; white-space:pre-wrap; word-break:break-all;}
+  .cmd button{position:absolute; top:9px; right:9px; font:inherit; font-size:12px; border:1px solid var(--line);
+    background:#fff; border-radius:8px; padding:5px 10px; cursor:pointer;}
+
+  .note{background:var(--field); border-radius:14px; padding:14px 16px; font-size:13.5px; color:#444;}
+  .note b{color:var(--ink);}
+
+  footer{border-top:1px solid var(--line); padding:30px 0 60px; color:var(--gray); font-size:13px;}
+  footer a{color:var(--ink);}
+  .warn{color:#111; border:1px solid var(--ink); border-radius:12px; padding:12px 15px; font-size:13.5px; margin-top:14px; margin-bottom:40px;}
+
+  /* 스크린샷 쇼케이스 */
+  .showcase{margin-top:26px; margin-bottom:44px; display:flex; flex-direction:column; align-items:center;}
+  .phone{width:248px; aspect-ratio:1080/2360; background:#0d0d0f; border-radius:36px;
+    padding:8px; box-shadow:0 24px 60px rgba(0,0,0,.20); position:relative;}
+  .phone::after{content:""; position:absolute; top:15px; left:50%; transform:translateX(-50%);
+    width:52px; height:5px; border-radius:99px; background:#2a2a2e; z-index:2;}
+  .phone-screen{width:100%; height:100%; border-radius:28px; overflow:hidden; background:#fff; position:relative;}
+  .phone-screen img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    object-position:top center; opacity:0; transition:opacity .55s ease;}
+  .phone-screen img.on{opacity:1;}
+  .shot-cap{margin-top:20px; font-size:14.5px; color:var(--ink); font-weight:600; min-height:20px; text-align:center;}
+  .dots{display:flex; gap:7px; justify-content:center; margin-top:14px;}
+  .dots button{height:7px; width:7px; border-radius:99px; border:0; background:var(--line);
+    padding:0; cursor:pointer; transition:all .3s ease;}
+  .dots button.on{background:var(--ink); width:22px;}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <span class="brand">
+    <svg class="lockmark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#111" d="M7 10V8a5 5 0 0 1 10 0v2h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V8a3 3 0 0 0-6 0v2Zm3 4a1.6 1.6 0 0 0-1 2.8V19h2v-2.2A1.6 1.6 0 0 0 12 14Z"/></svg>
+    StudyLock
+  </span>
+  <span class="spacer"></span>
+  <a class="pill" href="https://github.com/omioiom/gongbu" target="_blank" rel="noopener">GitHub</a>
+  <a class="pill solid" href="#install">설치</a>
+</div></div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h1>절대 안 뚫리는<br/>스터디 잠금앱</h1>
+    <p>기기관리자(Device Owner) 기반 초강력 잠금앱. 브라우저에서 USB로 연결하면 <b>간편하게</b> 원클릭으로 설치·등록됩니다.</p>
+    <div class="badges">
+      <a class="badge" href="https://github.com/omioiom/gongbu/blob/main/LICENSE" target="_blank" rel="noopener"><b>CC BY-NC-ND</b> 4.0</a>
+      <a class="badge" href="https://github.com/omioiom/gongbu" target="_blank" rel="noopener">오픈소스 · GitHub</a>
+      <span class="badge">Android · 무료</span>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <div class="phone"><div class="phone-screen" id="shots"></div></div>
+    <div class="shot-cap" id="shotCap"></div>
+    <div class="dots" id="shotDots"></div>
+  </div>
+
+  <section>
+    <h2>이게 뭔가요?</h2>
+    <p class="sub">StudyLock은 허용한 앱만 열리게 하는 자기통제 잠금 앱입니다.</p>
+    <div class="grid">
+      <div class="card"><h3>허용 앱만 사용</h3><p>내가 고른 공부 앱만 열리고 나머지는 차단.</p></div>
+      <div class="card"><h3>시간표 · 스크린타임</h3><p>하루 계획, 앱별/시간대 제한, 일정 알림.</p></div>
+      <div class="card"><h3>기기관리자 잠금</h3><p>삭제·안전모드·설정 우회까지 시스템 레벨 차단.</p></div>
+      <div class="card"><h3>소스 공개</h3><p>코드 전부 공개(CC BY-NC-ND · 개인·비상업). 서버 없음, 데이터는 기기에만.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>준비물</h2>
+    <p class="sub">기기관리자 등록은 아래 조건이 필요해요. (한 번만 하면 끝)</p>
+    <div class="grid">
+      <div class="card"><h3>PC + 크롬/엣지</h3><p>이 도구는 데스크톱 Chrome·Edge에서만 동작(WebUSB). 폰 브라우저는 불가.</p></div>
+      <div class="card"><h3>USB 케이블</h3><p>폰을 PC에 USB로 연결.</p></div>
+      <div class="card"><h3>USB 디버깅 ON</h3><p>개발자 옵션에서 켜기 (아래 안내).</p></div>
+      <div class="card"><h3>계정 0개</h3><p>기기관리자 등록은 <b>구글·삼성 계정이 없어야</b> 성공. 있으면 제거 또는 초기화.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>USB 디버깅 켜는 법</h2>
+    <p class="sub">삼성 원UI 기준. 기종마다 이름이 조금 다를 수 있어요.</p>
+    <ol class="steps">
+      <li><b>설정 → 휴대전화 정보 → 소프트웨어 정보</b></li>
+      <li><b>빌드번호</b>를 <b>7번</b> 연속 탭 → "개발자가 되었습니다" 문구확인</li>
+      <li><b>설정 (스크롤하여 맨 밑으로) → 개발자 옵션</b> 진입</li>
+      <li><b>USB 디버깅</b> 켜기</li>
+    </ol>
+  </section>
+
+  <section id="install">
+    <h2>설치하기</h2>
+    <p class="sub">아래 3개를 확인하고, 폰을 연결한 뒤 원클릭 설치하세요.</p>
+
+    <div class="installer">
+      <label class="check"><input type="checkbox" id="c1"><span>USB 디버깅을 켰어요<small>개발자 옵션 → USB 디버깅 ON</small></span></label>
+      <details class="acct">
+        <summary>USB 디버깅 켜는 법 (삼성 갤럭시)</summary>
+        <ol>
+          <li><b>설정 → 휴대전화 정보 → 소프트웨어 정보</b></li>
+          <li><b>빌드 번호</b>를 7번 연속 탭 → "개발자 모드 켜짐"</li>
+          <li>설정으로 나와 <b>개발자 옵션</b> 진입</li>
+          <li><b>USB 디버깅</b> 켜기</li>
+        </ol>
+      </details>
+
+      <label class="check"><input type="checkbox" id="c2"><span>구글·삼성 등 <b>계정을 모두 제거</b>했어요<small>없으면 기기관리자 등록이 실패해요 (초기화 권장)</small></span></label>
+      <details class="acct">
+        <summary>계정 0개 만드는 법 (삼성 갤럭시)</summary>
+        <ol>
+          <li><b>설정</b> 열기</li>
+          <li><b>계정 및 백업</b> → <b>계정 관리</b></li>
+          <li>삭제할 계정 클릭 → <b>계정 삭제</b></li>
+          <li><b>계정 관리에 계정이 하나도 안 남을 때까지</b> 반복</li>
+        </ol>
+        <p class="hint">만약 계정을 0개로 만들었는데 문제가 발생한 경우 문제발생시 생기는 <b>AI 빠른 해결</b> 버튼을 누르면 빠르고 쉽게 해결 가능해요</p>
+      </details>
+
+      <label class="check"><input type="checkbox" id="c3"><span>현재 이 사이트에 컴퓨터로 접속해있어요<small>컴퓨터와 핸드폰이 케이블로 연결되있어야해요</small></span></label>
+
+      <div class="btnrow">
+        <button class="btn ghost" id="connectBtn" disabled>① 폰 연결</button>
+        <button class="btn primary" id="installBtn" disabled>② 설치 &amp; 잠금 설정</button>
+        <button class="btn ghost" id="retryOwnerBtn" disabled>③ 기기관리자 재시도</button>
+      </div>
+
+      <div class="status" id="status"><pre class="log" id="log"></pre></div>
+
+      <button class="btn primary" id="aiSolveBtn" style="display:none; width:100%; margin-top:12px;">AI 빠른 해결 (자동 진단·수정)</button>
+    </div>
+
+    <p class="warn" id="unsupported" style="display:none">이 브라우저는 WebUSB를 지원하지 않아요. <b>데스크톱 Chrome 또는 Edge</b>로 열어주세요. (아래 수동 설치도 가능)</p>
+  </section>
+
+  <section>
+    <h2>수동 설치 (adb)</h2>
+    <p class="sub">위 원클릭이 안 되면, PC에 <b>adb</b> 깔고 아래 두 줄이면 끝이에요.</p>
+    <div class="cmd"><button data-copy>복사</button><pre>adb install -r StudyLock.apk</pre></div>
+    <div class="cmd"><button data-copy>복사</button><pre>adb shell dpm set-device-owner com.studylock/.AdminReceiver</pre></div>
+    <p class="hint">두 번째 명령이 실패하면 → 폰에 <b>계정이 남아있는 것</b>. 전부 제거(또는 초기화) 후 다시.</p>
+    <p><a class="badge" id="apkLink" href="StudyLock.apk" download>StudyLock.apk 직접 받기</a></p>
+  </section>
+
+  <div class="warn">
+    <b>되돌리기(해제):</b> 앱 안에서 "완전 해제"를 누르면 기기관리자 권한을 반납하고 일반 상태로 돌아와요. 그 전엔 <b>삭제가 막혀</b> 있습니다.
+  </div>
+
+</div>
+
+<footer><div class="wrap">
+  <b>StudyLock</b> — CC BY-NC-ND 4.0 · 서버 없음, 데이터는 기기에만 저장 ·
+  <a href="https://github.com/omioiom/gongbu" target="_blank" rel="noopener">github.com/omioiom/gongbu</a><br/>
+  이 도구는 로컬(브라우저↔폰 USB)에서만 동작하며 어떤 데이터도 외부로 보내지 않습니다.
+</div></footer>
+
+<script type="module" src="./app.js?v=14"></script>
+<script>
+  // 복사 버튼
+  document.querySelectorAll('[data-copy]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const t=b.parentElement.querySelector('pre').innerText;
+      navigator.clipboard.writeText(t).then(()=>{b.textContent='복사됨';setTimeout(()=>b.textContent='복사',1200);});
+    });
+  });
+
+  // 스크린샷 캐러셀 (폰 목업 안에서 자동 전환)
+  (function(){
+    const shots=[
+      ["shots/1-home.jpeg","허용한 앱만 열리는 홈"],
+      ["shots/2-timetable.jpeg","시간표 · 타임라인"],
+      ["shots/3-screentime.jpeg","스크린타임 · 앱별/시간대 제한"],
+      ["shots/4-focus.jpeg","집중 잠금"],
+      ["shots/5-usage.jpeg","사용시간 통계"],
+      ["shots/6-settings.jpeg","세세한 설정"],
+    ];
+    const screen=document.getElementById('shots'),
+          cap=document.getElementById('shotCap'),
+          dw=document.getElementById('shotDots');
+    if(!screen) return;
+    shots.forEach(([src,label],i)=>{
+      const img=new Image(); img.src=src; img.alt=label; img.loading='lazy';
+      if(i===0) img.className='on'; screen.appendChild(img);
+      const b=document.createElement('button'); if(i===0) b.className='on';
+      b.setAttribute('aria-label',label); b.addEventListener('click',()=>go(i)); dw.appendChild(b);
+    });
+    const imgs=[...screen.children], dots=[...dw.children];
+    let idx=0, timer;
+    function go(i){
+      imgs[idx].classList.remove('on'); dots[idx].classList.remove('on');
+      idx=(i+shots.length)%shots.length;
+      imgs[idx].classList.add('on'); dots[idx].classList.add('on');
+      cap.textContent=shots[idx][1]; restart();
+    }
+    function restart(){ clearInterval(timer); timer=setInterval(()=>go(idx+1),3200); }
+    cap.textContent=shots[0][1]; restart();
+  })();
+</script>
+</body>
+</html>

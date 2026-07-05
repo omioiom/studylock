@@ -1,0 +1,10 @@
+# StudyLock 설치 페이지 — 빌드 없는 정적 사이트(docs 폴더 서빙)
+[build]
+  publish = "docs"
+  command = ""
+
+# APK 를 브라우저가 받도록(다운로드) 헤더
+[[headers]]
+  for = "/StudyLock.apk"
+  [headers.values]
+    Content-Type = "application/vnd.android.package-archive"
