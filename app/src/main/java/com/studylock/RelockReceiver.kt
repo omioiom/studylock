@@ -18,6 +18,12 @@ class RelockReceiver : BroadcastReceiver() {
 
         if (prefs.locked && lock.isDeviceOwner() && !DateUtil.reached(prefs.targetDateMillis)) {
             runCatching { lock.applyPolicies(prefs) }   // 정책 재적용 = 즉시 재잠금
+            // 스크린타임 즉시 재적용 — 이 시간에 걸린 앱별 제한/시간대 차단 복원
+            runCatching {
+                val t = java.time.LocalTime.now()
+                lock.applyScreenTime(prefs, System.currentTimeMillis(), t.hour * 60 + t.minute)
+                ScreenTimeReceiver.ensure(context, prefs)
+            }
         }
 
         // 전면화 시도 (lockTask 재진입은 MainActivity.onResume 에서 처리)

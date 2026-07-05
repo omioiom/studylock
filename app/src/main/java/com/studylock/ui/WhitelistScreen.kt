@@ -176,10 +176,16 @@ private fun WlRow(title: String, sub: String, onDelete: () -> Unit) {
     Spacer(Modifier.height(10.dp))
 }
 
+// 스크린타임 화면의 AddRow 와 동일한 디자인
 @Composable private fun AddR(label: String, onClick: () -> Unit) {
-    Box(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 14.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxWidth()
+        .clip(RoundedCornerShape(12.dp))
+        .border(1.dp, GrayLight, RoundedCornerShape(12.dp))
+        .clickable(onClick = onClick).padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center) {
         Text(label, color = Ink, style = MaterialTheme.typography.labelLarge)
     }
+    Spacer(Modifier.height(8.dp))
 }
 
 // ---- 앱 허용 추가 ----

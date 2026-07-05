@@ -28,6 +28,10 @@ class BootReceiver : BroadcastReceiver() {
         prefs.tempUnlockUntil = 0L
         runCatching { lock.applyPolicies(prefs) }
         if (prefs.focusLockActive()) runCatching { lock.applyFocusLock() }
+        runCatching {
+            val t = java.time.LocalTime.now()
+            lock.applyScreenTime(prefs, System.currentTimeMillis(), t.hour * 60 + t.minute)
+        }
         runCatching { ScreenTimeReceiver.ensure(context, prefs) }
         runCatching { ScheduleNotifier.reschedule(context, prefs) }
 

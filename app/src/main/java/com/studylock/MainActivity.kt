@@ -276,6 +276,9 @@ private fun AppRoot(prefs: Prefs, lock: LockManager, activity: MainActivity) {
                         prefs.tempUnlockUntil = 0L
                         activity.cancelRelock()
                         lock.applyPolicies(prefs)
+                        val t = java.time.LocalTime.now()
+                        lock.applyScreenTime(prefs, System.currentTimeMillis(), t.hour * 60 + t.minute)
+                        ScreenTimeReceiver.ensure(activity, prefs)
                         activity.ensureLockTask()
                         screen = Screen.KIOSK
                     }
@@ -427,6 +430,9 @@ private fun AppRoot(prefs: Prefs, lock: LockManager, activity: MainActivity) {
                     prefs.tempUnlockUntil = until
                     activity.leaveLockTask()       // lockTask 종료
                     lock.beginTempUnlock()         // 키오스크 제약 풀기
+                    // 해제 중엔 스크린타임 숨김도 즉시 풀기 (tempUnlockActive → 전체 복원)
+                    val t = java.time.LocalTime.now()
+                    lock.applyScreenTime(prefs, System.currentTimeMillis(), t.hour * 60 + t.minute)
                     activity.scheduleRelock(until) // 3분 뒤 재잠금 알람
                     activity.goHomeLauncher()      // 실제 런처로 내보내 자유 사용
                     screen = Screen.TEMP_UNLOCK
@@ -446,6 +452,10 @@ private fun AppRoot(prefs: Prefs, lock: LockManager, activity: MainActivity) {
                 prefs.tempUnlockUntil = 0L
                 activity.cancelRelock()
                 lock.applyPolicies(prefs)
+                // 스크린타임 즉시 재적용 — 이 시간에 걸린 앱별 제한/시간대 차단 복원
+                val t = java.time.LocalTime.now()
+                lock.applyScreenTime(prefs, System.currentTimeMillis(), t.hour * 60 + t.minute)
+                ScreenTimeReceiver.ensure(activity, prefs)
                 activity.ensureLockTask()
                 screen = Screen.KIOSK
             },
@@ -481,6 +491,9 @@ private fun tryScheduledUnlock(prefs: Prefs, lock: LockManager, activity: MainAc
     prefs.tempUnlockUntil = endMs
     activity.leaveLockTask()
     lock.beginTempUnlock()
+    // 전체 해제 창: 스크린타임 숨김도 즉시 풀기 (tempUnlockActive → 전체 복원)
+    val lt = java.time.LocalTime.now()
+    lock.applyScreenTime(prefs, System.currentTimeMillis(), lt.hour * 60 + lt.minute)
     activity.scheduleRelock(endMs)
     activity.goHomeLauncher()
     return true

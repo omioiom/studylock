@@ -24,9 +24,10 @@ class ScreenTimeReceiver : BroadcastReceiver() {
         ScreenTime.accrue(prefs, now, clear = false)   // 진행 세션 부분 누적
         lock.applyScreenTime(prefs, now, nowMin)
 
-        // 사용 중인 앱이 방금 차단됐으면 → 홈으로 튕김
+        // 사용 중인 앱이 방금 차단됐으면 → 홈으로 튕김 (임시해제 중엔 튕기지 않음)
         val sessionPkg = prefs.stSessionPkg
-        if (sessionPkg != null && sessionPkg in ScreenTime.blockedApps(prefs, now, nowMin)) {
+        if (!prefs.tempUnlockActive() && sessionPkg != null &&
+            sessionPkg in ScreenTime.blockedApps(prefs, now, nowMin)) {
             ScreenTime.accrue(prefs, now, clear = true)   // 세션 종료
             runCatching {
                 context.startActivity(

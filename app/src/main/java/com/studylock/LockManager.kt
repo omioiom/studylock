@@ -192,7 +192,10 @@ class LockManager(context: Context) {
      */
     fun applyScreenTime(prefs: Prefs, nowMs: Long, nowMin: Int) {
         if (!isDeviceOwner()) return
-        val blocked = ScreenTime.blockedApps(prefs, nowMs, nowMin)
+        // 임시해제(3분/전체해제 창) 중엔 스크린타임 숨김도 전부 풀림.
+        // 재잠금 경로에서 tempUnlockUntil=0 으로 만든 뒤 다시 호출해 즉시 재적용한다.
+        val blocked = if (prefs.tempUnlockActive()) emptySet()
+                      else ScreenTime.blockedApps(prefs, nowMs, nowMin)
         prefs.allowedPackages.forEach { pkg ->
             runCatching { dpm.setApplicationHidden(admin, pkg, pkg in blocked) }
         }
@@ -223,6 +226,11 @@ class LockManager(context: Context) {
         runCatching { dpm.clearUserRestriction(admin, UserManager.DISALLOW_CONFIG_DATE_TIME) }
         runCatching { dpm.clearPackagePersistentPreferredActivities(admin, appCtx.packageName) }
         runCatching { dpm.setLockTaskPackages(admin, emptyArray()) }
+
+        // 스크린타임으로 숨겨둔 앱 전부 복원 — Device Owner 반납 후엔 되돌릴 수 없다
+        runCatching {
+            prefs.allowedPackages.forEach { dpm.setApplicationHidden(admin, it, false) }
+        }
 
         // 플로팅 일정 서비스 중단
         ScheduleFloatService.stop(appCtx)
