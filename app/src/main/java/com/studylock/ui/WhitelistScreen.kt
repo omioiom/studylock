@@ -224,7 +224,7 @@ private fun AddAllowScreen(prefs: Prefs, context: android.content.Context,
                 }
             }
         }
-        WlButton("저장", enabled = pkg != null && end > start && selDays.isNotEmpty()) { pkg?.let { onSave(it, start, end, daysMask(selDays)) } }
+        WlButton("저장", enabled = pkg != null && end > start && selDays.isNotEmpty()) { pkg?.let { onSave(it, start, end, daysMaskFor(prefs, selDays)) } }
         WlBack(onBack); Spacer(Modifier.height(16.dp))
     }
 }
@@ -246,7 +246,7 @@ private fun AddUnlockScreen(prefs: Prefs, onBack: () -> Unit, onSave: (Int, Int,
         Row { WlTimeStepper("시작", start) { start = it }; Spacer(Modifier.width(16.dp)); WlTimeStepper("종료", end) { end = it } }
         if (prefs.timetablePerDay) { Spacer(Modifier.height(20.dp)); DayPicker(selDays) { selDays = it } }
         Spacer(Modifier.weight(1f))
-        WlButton("저장", enabled = end > start && selDays.isNotEmpty()) { onSave(start, end, daysMask(selDays)) }
+        WlButton("저장", enabled = end > start && selDays.isNotEmpty()) { onSave(start, end, daysMaskFor(prefs, selDays)) }
         WlBack(onBack); Spacer(Modifier.height(16.dp))
     }
 }

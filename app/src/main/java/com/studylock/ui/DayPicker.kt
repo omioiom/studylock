@@ -28,6 +28,10 @@ fun todayDaySet(): Set<Int> = setOf(com.studylock.ScreenTime.dowOf(System.curren
 fun daysMask(sel: Set<Int>): Int =
     if (sel.size >= 7) 0 else sel.fold(0) { a, d -> a or (1 shl (d - 1)) }
 
+/** 요일별 모드가 꺼져 있으면(DayPicker 미노출) 무조건 매일(0)로 저장 */
+fun daysMaskFor(prefs: com.studylock.Prefs, sel: Set<Int>): Int =
+    if (prefs.timetablePerDay) daysMask(sel) else 0
+
 /** 비트마스크 → dow set(1~7). 0(매일)이면 전체. */
 fun maskToDays(mask: Int): Set<Int> =
     if (mask == 0) (1..7).toSet() else (1..7).filter { (mask and (1 shl (it - 1))) != 0 }.toSet()

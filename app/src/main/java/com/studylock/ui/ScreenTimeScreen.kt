@@ -491,7 +491,7 @@ private fun AddLimitScreen(prefs: Prefs, context: android.content.Context,
             }
         }
         Spacer(Modifier.height(16.dp))
-        FilledButton("저장", enabled = pkg != null && selDays.isNotEmpty()) { pkg?.let { onSave(it, minutes, daysMask(selDays)) } }
+        FilledButton("저장", enabled = pkg != null && selDays.isNotEmpty()) { pkg?.let { onSave(it, minutes, daysMaskFor(prefs, selDays)) } }
         BackText(onBack)
         Spacer(Modifier.height(16.dp))
     }
@@ -539,7 +539,7 @@ private fun AddWindowScreen(prefs: Prefs, context: android.content.Context,
                 }
             }
         }
-        FilledButton("저장", enabled = chosen.isNotEmpty() && end > start && selDays.isNotEmpty()) { onSave(chosen, start, end, daysMask(selDays)) }
+        FilledButton("저장", enabled = chosen.isNotEmpty() && end > start && selDays.isNotEmpty()) { onSave(chosen, start, end, daysMaskFor(prefs, selDays)) }
         BackText(onBack)
         Spacer(Modifier.height(16.dp))
     }
@@ -662,7 +662,7 @@ private fun AddScheduleScreen(prefs: Prefs, context: android.content.Context,
             FilledButton(
                 if (chosenApps.isEmpty()) "앱을 1개 이상 골라주세요" else "저장",
                 enabled = chosenApps.isNotEmpty()
-            ) { onSave(chosenApps, chosenBlocks, daysMask(selDays)) }
+            ) { onSave(chosenApps, chosenBlocks, daysMaskFor(prefs, selDays)) }
         }
         BackText { if (step == 0) onBack() else step = 0 }
         Spacer(Modifier.height(16.dp))
@@ -706,7 +706,7 @@ private fun EditTotalScreen(prefs: Prefs, current: Int, currentDays: Int, onBack
             }
         }
         Spacer(Modifier.weight(1f))
-        FilledButton("저장", enabled = selDays.isNotEmpty()) { onSave(minutes, daysMask(selDays)) }
+        FilledButton("저장", enabled = selDays.isNotEmpty()) { onSave(minutes, daysMaskFor(prefs, selDays)) }
         BackText(onBack)
         Spacer(Modifier.height(16.dp))
     }

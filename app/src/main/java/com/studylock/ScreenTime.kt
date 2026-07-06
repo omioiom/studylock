@@ -236,22 +236,26 @@ object ScreenTime {
         val r = parseRules(prefs.screenTimeJson)
         if (r.isEmpty()) return emptySet()
         val dow = dowOf(nowMs)
+        // 요일별 모드가 꺼져 있으면 저장된 요일과 무관하게 매일 적용
+        // (요일 선택 UI 가 안 보이는 상태에서 만든 규칙에 생성 요일이 박혀 있어도 무시)
+        val perDay = prefs.timetablePerDay
+        fun onToday(days: Int) = !perDay || appliesOn(days, dow)
         val blocked = mutableSetOf<String>()
         // 시간대 차단 (오늘 요일에 적용되는 것만)
         r.windows.forEach { w ->
-            if (appliesOn(w.days, dow) && inWindow(w.startMin, w.endMin, nowMin)) blocked += w.apps
+            if (onToday(w.days) && inWindow(w.startMin, w.endMin, nowMin)) blocked += w.apps
         }
         // 앱별 제한
         val um = usageMap(prefs)
         r.appLimits.forEach { a ->
-            if (appliesOn(a.days, dow) && (um[a.pkg] ?: 0L) >= a.limitMin * 60L) blocked += a.pkg
+            if (onToday(a.days) && (um[a.pkg] ?: 0L) >= a.limitMin * 60L) blocked += a.pkg
         }
         // 전체 제한 → 모든 허용앱 차단
-        if (r.totalLimitMin > 0 && appliesOn(r.totalDays, dow) && prefs.stTotalSeconds >= r.totalLimitMin * 60L) {
+        if (r.totalLimitMin > 0 && onToday(r.totalDays) && prefs.stTotalSeconds >= r.totalLimitMin * 60L) {
             blocked += prefs.allowedPackages
         }
         // 화이트리스트(앱 허용창): 오늘 적용되는 허용창이 있는 앱은 그 시간 외엔 차단
-        val todaysAllows = r.allowWindows.filter { appliesOn(it.days, dow) }
+        val todaysAllows = r.allowWindows.filter { onToday(it.days) }
         todaysAllows.map { it.pkg }.toSet().forEach { pkg ->
             val allowedNow = todaysAllows.any { it.pkg == pkg && inWindow(it.startMin, it.endMin, nowMin) }
             if (!allowedNow) blocked += pkg else blocked.remove(pkg)
@@ -263,7 +267,10 @@ object ScreenTime {
     fun activeUnlockWindow(prefs: Prefs, nowMin: Int): UnlockWindow? {
         val dow = dowOf(System.currentTimeMillis())
         return parseRules(prefs.screenTimeJson).unlockWindows
-            .firstOrNull { appliesOn(it.days, dow) && inWindow(it.startMin, it.endMin, nowMin) }
+            .firstOrNull {
+                (!prefs.timetablePerDay || appliesOn(it.days, dow)) &&
+                    inWindow(it.startMin, it.endMin, nowMin)
+            }
     }
 
     fun hasRules(prefs: Prefs): Boolean = !parseRules(prefs.screenTimeJson).isEmpty()
