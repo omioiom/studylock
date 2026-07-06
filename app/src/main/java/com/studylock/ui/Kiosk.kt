@@ -40,12 +40,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.core.graphics.drawable.toBitmap
-import com.studylock.AppEntry
 import com.studylock.DateUtil
 import com.studylock.Prefs
 import com.studylock.TimetableLoader
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+
+/** 그리드용 앱 항목. 아이콘은 미리 비트맵으로 변환해 캐시. */
+data class KioskApp(val packageName: String, val label: String, val icon: ImageBitmap)
+
+/** 라벨·아이콘 로딩이 비싸서(앱당 수십 ms, 메인스레드 잭 유발) 프로세스 단위로 캐시 */
+private val kioskAppCache = java.util.concurrent.ConcurrentHashMap<String, KioskApp>()
 
 /**
  * 키오스크 홈. 큰 D-day + 허용앱 그리드.
@@ -80,21 +88,28 @@ fun KioskScreen(
         TimetableLoader.currentIndex(bs, nowMin).takeIf { it >= 0 }?.let { bs[it] }
     }
 
-    var apps by remember { mutableStateOf<List<AppEntry>>(emptyList()) }
-    // nowMin 도 키에 넣어 차단(숨김)된 앱이 1분 내 그리드에서 사라지도록
+    var apps by remember { mutableStateOf<List<KioskApp>>(emptyList()) }
+    // nowMin 도 키에 넣어 차단(숨김)된 앱이 1분 내 그리드에서 사라지도록.
+    // PackageManager 조회·아이콘 디코딩은 IO 스레드 + 캐시로 — 메인스레드 걸림 방지.
     LaunchedEffect(refreshKey, prefs.allowedPackages, nowMin) {
-        val pm = context.packageManager
-        apps = prefs.allowedPackages.mapNotNull { pkg ->
-            runCatching {
-                val ai = pm.getApplicationInfo(pkg, 0)  // 숨김 앱은 예외 → 그리드서 제외
-                AppEntry(pkg, pm.getApplicationLabel(ai).toString(), pm.getApplicationIcon(ai))
-            }.getOrNull()
-        }.sortedBy { it.label.lowercase() }
+        val pkgs = prefs.allowedPackages
+        apps = withContext(Dispatchers.IO) {
+            val pm = context.packageManager
+            pkgs.mapNotNull { pkg ->
+                runCatching {
+                    val ai = pm.getApplicationInfo(pkg, 0)  // 숨김 앱은 예외 → 그리드서 제외
+                    kioskAppCache.getOrPut(pkg) {
+                        KioskApp(pkg, pm.getApplicationLabel(ai).toString(),
+                            pm.getApplicationIcon(ai).toBitmap(120, 120).asImageBitmap())
+                    }
+                }.getOrNull()
+            }.sortedBy { it.label.lowercase() }
+        }
     }
 
     // ---- 허용앱 롱프레스 메뉴 ----
-    var menuApp by remember { mutableStateOf<AppEntry?>(null) }
-    var slide by remember { mutableStateOf<Pair<String, AppEntry>?>(null) }
+    var menuApp by remember { mutableStateOf<KioskApp?>(null) }
+    var slide by remember { mutableStateOf<Pair<String, KioskApp>?>(null) }
     menuApp?.let { e ->
         ActionSheet(
             title = e.label,
@@ -321,13 +336,12 @@ private fun LockGlyph() {
 
 @Composable
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-private fun AppTile(entry: AppEntry, onLongClick: () -> Unit, onClick: () -> Unit) {
-    val bmp = remember(entry.packageName) { entry.icon.toBitmap(120, 120).asImageBitmap() }
+private fun AppTile(entry: KioskApp, onLongClick: () -> Unit, onClick: () -> Unit) {
     Column(
         Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick).padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Image(bitmap = bmp, contentDescription = entry.label, modifier = Modifier.size(56.dp))
+        Image(bitmap = entry.icon, contentDescription = entry.label, modifier = Modifier.size(56.dp))
         Spacer(Modifier.height(8.dp))
         Text(
             entry.label, color = Ink, fontSize = 12.sp,
