@@ -104,6 +104,48 @@ class Prefs(context: Context) {
         get() = sp.getBoolean(KEY_DARK_MODE, false)
         set(v) = sp.edit().putBoolean(KEY_DARK_MODE, v).apply()
 
+    // ---- TODO(할 일) ----
+
+    /** 할 일 목록 JSON ({"todos":[...]}) */
+    var todoJson: String?
+        get() = sp.getString(KEY_TODO_JSON, null)
+        set(v) = sp.edit().putString(KEY_TODO_JSON, v).apply()
+
+    /** 기본 뷰 0=리스트 1=캘린더 2=타임라인 */
+    var todoView: Int
+        get() = sp.getInt(KEY_TODO_VIEW, 0)
+        set(v) = sp.edit().putInt(KEY_TODO_VIEW, v).apply()
+
+    /** 정렬 0=시간순 1=우선순위 2=카테고리 3=생성순 */
+    var todoSort: Int
+        get() = sp.getInt(KEY_TODO_SORT, 0)
+        set(v) = sp.edit().putInt(KEY_TODO_SORT, v).apply()
+
+    /** 리스트 그룹핑 0=날짜 1=상태 2=카테고리 */
+    var todoGroup: Int
+        get() = sp.getInt(KEY_TODO_GROUP, 0)
+        set(v) = sp.edit().putInt(KEY_TODO_GROUP, v).apply()
+
+    /** 완료 항목 표시 */
+    var todoShowDone: Boolean
+        get() = sp.getBoolean(KEY_TODO_SHOWDONE, true)
+        set(v) = sp.edit().putBoolean(KEY_TODO_SHOWDONE, v).apply()
+
+    /** 완료·지난 항목 흐리게 */
+    var todoDimDone: Boolean
+        get() = sp.getBoolean(KEY_TODO_DIMDONE, true)
+        set(v) = sp.edit().putBoolean(KEY_TODO_DIMDONE, v).apply()
+
+    /** 미완료 이월(지난 미완료를 오늘로) */
+    var todoCarryOver: Boolean
+        get() = sp.getBoolean(KEY_TODO_CARRY, true)
+        set(v) = sp.edit().putBoolean(KEY_TODO_CARRY, v).apply()
+
+    /** 주 시작 요일 0=월 1=일 */
+    var todoWeekStart: Int
+        get() = sp.getInt(KEY_TODO_WEEKSTART, 0)
+        set(v) = sp.edit().putInt(KEY_TODO_WEEKSTART, v).apply()
+
     /** 다른 앱 쓸 때 진행 중인 일정 플로팅 표시 */
     var floatingSchedule: Boolean
         get() = sp.getBoolean(KEY_FLOAT_SCHED, false)
@@ -265,6 +307,14 @@ class Prefs(context: Context) {
         private const val KEY_TT_AUTOSCROLL = "tt_autoscroll"
         private const val KEY_HOME_DDAY = "home_dday"
         private const val KEY_DARK_MODE = "dark_mode"
+        private const val KEY_TODO_JSON = "todo_json"
+        private const val KEY_TODO_VIEW = "todo_view"
+        private const val KEY_TODO_SORT = "todo_sort"
+        private const val KEY_TODO_GROUP = "todo_group"
+        private const val KEY_TODO_SHOWDONE = "todo_showdone"
+        private const val KEY_TODO_DIMDONE = "todo_dimdone"
+        private const val KEY_TODO_CARRY = "todo_carry"
+        private const val KEY_TODO_WEEKSTART = "todo_weekstart"
         private const val KEY_FLOAT_SCHED = "floating_schedule"
         private const val KEY_SCHED_VIBE = "schedule_vibe_mode"
         private const val KEY_TT_NOTIFY_START = "tt_notify_start"

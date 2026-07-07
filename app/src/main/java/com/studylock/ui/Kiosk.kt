@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -69,6 +70,7 @@ fun KioskScreen(
     onOpenScreenTime: () -> Unit,
     onOpenWhitelist: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenTodo: () -> Unit,
     onExcludeApp: (String) -> Unit,
     onUninstallApp: (String) -> Unit,
     onLimitApp: (String) -> Unit
@@ -240,6 +242,31 @@ fun KioskScreen(
 
         // ---- 설정(기어) 좌상단 → 관리 메뉴는 설정 안에서 진입 ----
         GearIcon(onClick = onOpenSettings, modifier = Modifier.align(Alignment.TopStart))
+
+        // ---- TODO(할 일) 우상단 진입점 ----
+        TodoIcon(onClick = onOpenTodo, modifier = Modifier.align(Alignment.TopEnd))
+    }
+}
+
+@Composable
+private fun TodoIcon(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(modifier.size(56.dp).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.size(24.dp)) {
+            val w = size.width; val h = size.height
+            val stroke = h * 0.09f
+            // 체크리스트: 3줄 + 각 줄 앞 체크박스
+            val rows = listOf(0.2f, 0.5f, 0.8f)
+            rows.forEach { yf ->
+                val y = h * yf
+                val boxS = h * 0.16f
+                drawRect(Ink, topLeft = androidx.compose.ui.geometry.Offset(0f, y - boxS / 2),
+                    size = androidx.compose.ui.geometry.Size(boxS, boxS),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke * 0.8f))
+                drawLine(Ink,
+                    androidx.compose.ui.geometry.Offset(w * 0.34f, y),
+                    androidx.compose.ui.geometry.Offset(w, y), strokeWidth = stroke)
+            }
+        }
     }
 }
 

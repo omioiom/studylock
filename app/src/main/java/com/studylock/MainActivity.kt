@@ -47,6 +47,7 @@ import com.studylock.ui.TempUnlockScreen
 import com.studylock.ui.ScreenTimeRoot
 import com.studylock.ui.WhitelistRoot
 import com.studylock.ui.SettingsRoot
+import com.studylock.ui.TodoRoot
 import com.studylock.ui.PrimaryButton
 import com.studylock.ui.SetupFlow
 import com.studylock.ui.StudyLockTheme
@@ -54,7 +55,7 @@ import com.studylock.ui.Ink
 import com.studylock.ui.Gray
 import com.studylock.ui.Paper
 
-private enum class Screen { INSTRUCTIONS, SETUP, KIOSK, PIN, TIMETABLE, FOCUS_SETUP, FOCUS_LOCK, TEMP_UNLOCK, SCREENTIME, WHITELIST, SETTINGS, DONE }
+private enum class Screen { INSTRUCTIONS, SETUP, KIOSK, PIN, TIMETABLE, FOCUS_SETUP, FOCUS_LOCK, TEMP_UNLOCK, SCREENTIME, WHITELIST, SETTINGS, TODO, DONE }
 
 class MainActivity : ComponentActivity() {
 
@@ -101,6 +102,9 @@ class MainActivity : ComponentActivity() {
             lock.applyScreenTime(prefs, System.currentTimeMillis(), t.hour * 60 + t.minute)
             ScreenTimeReceiver.ensure(this, prefs)
         }
+
+        // 할 일: 반복 굴리기 + 미완료 이월 처리
+        runCatching { TodoStore.ensureFresh(prefs) }
 
         // 일정 알림: 채널 보장 + 다음 경계 재예약.
         // 디바이스 오너면 applyPolicies 가 알림 권한을 자동 부여하므로 권한창을 띄우지 않음.
@@ -357,6 +361,7 @@ private fun AppRoot(prefs: Prefs, lock: LockManager, activity: MainActivity) {
                 onOpenScreenTime = { screen = Screen.SCREENTIME },
                 onOpenWhitelist = { screen = Screen.WHITELIST },
                 onOpenSettings = { screen = Screen.SETTINGS },
+                onOpenTodo = { screen = Screen.TODO },
                 onExcludeApp = { pkg ->
                     prefs.allowedPackages = prefs.allowedPackages - pkg
                     lock.refreshAllowedApps(prefs)   // lockTask 화이트리스트 갱신
@@ -385,6 +390,10 @@ private fun AppRoot(prefs: Prefs, lock: LockManager, activity: MainActivity) {
 
         Screen.WHITELIST -> WhitelistRoot(
             prefs = prefs, lock = lock, onClose = { screen = Screen.KIOSK }
+        )
+
+        Screen.TODO -> TodoRoot(
+            prefs = prefs, onClose = { refreshKey++; screen = Screen.KIOSK }
         )
 
         Screen.SETTINGS -> SettingsRoot(

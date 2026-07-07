@@ -34,6 +34,7 @@ class BootReceiver : BroadcastReceiver() {
         }
         runCatching { ScreenTimeReceiver.ensure(context, prefs) }
         runCatching { ScheduleNotifier.reschedule(context, prefs) }
+        runCatching { TodoStore.ensureFresh(prefs) }
 
         // 앱을 띄워 lockTask 재진입 (device owner 는 백그라운드 실행 시작 제한 예외)
         runCatching {
