@@ -45,6 +45,33 @@ object ScreenTime {
 
     fun editable(createdAt: Long, now: Long) = now - createdAt < EDIT_WINDOW_MS
 
+    /**
+     * 같은 일정(시간대)을 가리키는 차단창들 중 '굳은(1시간 경과)' 것끼리 한 창으로 합친다.
+     * - 수정가능(1시간 내) 창은 그대로 둔다 → 방금 추가한 앱을 창째로 자유롭게 지울 수 있게.
+     * - 굳은 뒤엔 어차피 PIN 없이 못 빼므로 합쳐서 목록을 깔끔히 한다(차단 효과는 완전히 동일).
+     * 합친 창의 createdAt 은 가장 오래된 값 → 계속 잠긴 상태 유지.
+     * 변경이 없으면 입력 그대로(같은 인스턴스) 반환.
+     */
+    fun compactWindows(r: ScreenTimeRules, now: Long): ScreenTimeRules {
+        if (r.windows.size < 2) return r
+        val locked = r.windows.filter { !editable(it.createdAt, now) }
+        val fresh = r.windows.filter { editable(it.createdAt, now) }
+        if (locked.size < 2) return r
+        // 그룹 키: blockId 있으면 (요일,blockId), 없으면 (요일,시작,종료)
+        fun key(w: BlockWindow): String =
+            if (w.blockId.isNotBlank()) "d${w.days}|b${w.blockId}"
+            else "d${w.days}|t${w.startMin}-${w.endMin}"
+        val merged = locked.groupBy { key(it) }.map { (_, g) ->
+            if (g.size == 1) g[0]
+            else g.minByOrNull { it.createdAt }!!.copy(
+                apps = g.flatMap { it.apps }.distinct(),
+                createdAt = g.minOf { it.createdAt }
+            )
+        }
+        val out = fresh + merged
+        return if (out.size == r.windows.size) r else r.copy(windows = out)
+    }
+
     /** 오늘 요일 1=월 … 7=일 */
     fun dowOf(nowMs: Long): Int =
         java.time.Instant.ofEpochMilli(nowMs).atZone(java.time.ZoneId.systemDefault())

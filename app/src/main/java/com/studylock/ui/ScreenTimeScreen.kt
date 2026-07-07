@@ -86,7 +86,15 @@ private fun appLabel(prefs: Prefs, context: android.content.Context, pkg: String
 @Composable
 fun ScreenTimeRoot(prefs: Prefs, lock: LockManager, onClose: () -> Unit, initialLimitPkg: String? = null) {
     val context = LocalContext.current
-    var rules by remember { mutableStateOf(ScreenTime.parseRules(prefs.screenTimeJson)) }
+    // 화면 열 때 '굳은' 같은-일정 창들을 자동 병합해 목록을 깔끔히 (차단 효과는 동일).
+    var rules by remember {
+        mutableStateOf(run {
+            val parsed = ScreenTime.parseRules(prefs.screenTimeJson)
+            val compact = ScreenTime.compactWindows(parsed, System.currentTimeMillis())
+            if (compact !== parsed) prefs.screenTimeJson = ScreenTime.serialize(compact)
+            compact
+        })
+    }
     // 앱 롱프레스로 진입했으면 바로 '앱별 하루 제한 추가'로
     var sub by remember { mutableStateOf(if (initialLimitPkg != null) StSub.ADD_LIMIT else StSub.MAIN) }
     var limitPreselect by remember { mutableStateOf(initialLimitPkg) }
@@ -147,8 +155,13 @@ fun ScreenTimeRoot(prefs: Prefs, lock: LockManager, onClose: () -> Unit, initial
             onBack = { sub = StSub.MAIN },
             onSave = { apps, s, e, days ->
                 val now = System.currentTimeMillis()
-                // 같은 시간대·같은 요일의 수동 차단창이 이미 있으면 그 컨테이너에 앱만 합침(새 창 X)
-                val existing = rules.windows.firstOrNull { it.blockId.isBlank() && it.startMin == s && it.endMin == e && it.days == days }
+                // 같은 시간대·같은 요일의 수동 차단창이 '아직 수정가능(1시간 내)'이면 거기에 앱만 합침.
+                // 잠긴 창엔 합치지 않고 새 창을 만든다 → 방금 추가한 앱은 1시간 유예로 되돌릴 수 있고,
+                // 삭제해도 기존 잠긴 앱을 건드리지 않는다.
+                val existing = rules.windows.firstOrNull {
+                    it.blockId.isBlank() && it.startMin == s && it.endMin == e && it.days == days &&
+                        ScreenTime.editable(it.createdAt, now)
+                }
                 if (existing != null) {
                     val merged = existing.copy(apps = (existing.apps + apps).distinct())
                     persist(rules.copy(windows = rules.windows.map { if (it === existing) merged else it }))
@@ -165,10 +178,12 @@ fun ScreenTimeRoot(prefs: Prefs, lock: LockManager, onClose: () -> Unit, initial
                 var added = 0
                 picked.forEach { b ->
                     val e = b.endMin % 1440
-                    // 같은 일정(blockId)·같은 요일 컨테이너가 있으면 앱만 합침
+                    // 같은 일정(blockId)·같은 요일 컨테이너가 '아직 수정가능(1시간 내)'이면 앱만 합침.
+                    // 잠긴 창엔 합치지 않고 새 창을 만든다 → 방금 추가한 앱만 유예/삭제 가능, 기존 잠긴 앱은 보존.
                     val existing = wins.firstOrNull {
-                        it.days == days && (if (b.id.isNotBlank()) it.blockId == b.id
-                        else it.blockId.isBlank() && it.startMin == b.startMin && it.endMin == e)
+                        it.days == days && ScreenTime.editable(it.createdAt, now) &&
+                            (if (b.id.isNotBlank()) it.blockId == b.id
+                            else it.blockId.isBlank() && it.startMin == b.startMin && it.endMin == e)
                     }
                     if (existing != null) {
                         val merged = existing.copy(apps = (existing.apps + apps).distinct())
