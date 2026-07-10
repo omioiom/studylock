@@ -64,7 +64,8 @@ private fun fmtDateKr(d: LocalDate): String =
 @Composable
 fun TodoRoot(prefs: Prefs, onClose: () -> Unit) {
     val context = LocalContext.current
-    var items by remember { mutableStateOf(TodoStore.load(prefs)) }
+    // 화면 열 때마다 밀린 미완료를 오늘로 이월(반복도 굴림). 콜드 스타트에만 의존하지 않게.
+    var items by remember { mutableStateOf(run { TodoStore.ensureFresh(prefs); TodoStore.load(prefs) }) }
     var sub by remember { mutableStateOf(TodoSub.MAIN) }
     var view by remember { mutableIntStateOf(prefs.todoView.coerceIn(0, 1)) }
     var editing by remember { mutableStateOf<TodoItem?>(null) }
