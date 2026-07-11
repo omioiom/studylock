@@ -373,7 +373,8 @@ private fun CalendarBody(
                     val dayNum = idx - lead + 1
                     if (dayNum in 1..daysInMonth) {
                         val d = month.atDay(dayNum)
-                        val hasTodos = d.toString() in hasTodoDates
+                        // 지난 날짜는 할 일이 있어도 테두리 표시 안 함(오늘·이후만)
+                        val hasTodos = d.toString() in hasTodoDates && !d.isBefore(today)
                         val isSel = d == selected
                         val isToday = d == today
                         // 일정 있는 날 = 검은 테두리(2dp), 오늘 = 검은 테두리, 그 외 = 연한 테두리

@@ -93,6 +93,19 @@
             android:name=".ScheduleNotifyReceiver"
             android:exported="false" />
 
+        <!-- 구글앱 전경 감시(검색 화면 진입 차단) -->
+        <service
+            android:name=".GoogleGuardService"
+            android:exported="false"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/google_guard_accessibility" />
+        </service>
+
         <!-- 기기 관리자 (Device Owner) -->
         <receiver
             android:name=".AdminReceiver"

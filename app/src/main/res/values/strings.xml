@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">StudyLock</string>
+    <string name="google_guard_desc">구글 앱 검색 화면 진입을 막아 학습 잠금을 유지합니다. (Gemini는 허용)</string>
 </resources>

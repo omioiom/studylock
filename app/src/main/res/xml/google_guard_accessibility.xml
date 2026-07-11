@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 구글 앱 전경 감시: 검색 등 어시스턴트가 아닌 화면이 뜨면 종료. Gemini(어시스턴트)는 통과. -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:notificationTimeout="30"
+    android:packageNames="com.google.android.googlequicksearchbox"
+    android:canRetrieveWindowContent="false"
+    android:description="@string/google_guard_desc" />
