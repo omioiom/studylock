@@ -50,18 +50,22 @@ class LockManager(context: Context) {
      * 요청 화면을 띄우는 순간 lockTask 가 그 화면을 막아 앱이 홈으로 튕긴다.
      * 전부 사용자가 앱을 벗어나 자유롭게 쓸 수 있는 '탈출로'가 아니라 보조 UI/서비스다.
      */
-    private fun essentialSupportPackages(): List<String> =
-        listOf(
+    private fun essentialSupportPackages(): List<String> {
+        val base = listOf(
             "com.google.android.gms",              // Google Play 서비스 (계정/인증)
             "com.google.android.gsf",              // Google Services Framework
             "com.google.android.permissioncontroller", // 런타임 권한 요청 화면
             "com.android.permissioncontroller",
             "com.google.android.packageinstaller",
-            "com.android.packageinstaller",
-            // Gemini(com.google.android.apps.bard)는 껍데기라 구글앱으로 넘겨 열림 →
-            // 이게 없으면 lockTask 가 그 전환을 막아 Gemini 가 열리자마자 닫힘.
-            "com.google.android.googlequicksearchbox"
-        ).filter { isInstalled(it) }
+            "com.android.packageinstaller"
+        )
+        // 구글 앱(Gemini/검색)은 접근성 가드가 켜져 있을 때만 허용.
+        // 가드가 꺼져 있으면 Gemini·검색을 구분 못 하므로 화이트리스트에서 빼 → lockTask 가 구글앱을 통째로 막는다.
+        // (Gemini 는 껍데기라 이 패키지로 넘겨 열리므로, 가드 켜져야 Gemini 도 열림)
+        val withGoogle = if (GoogleGuardService.isEnabled(appCtx))
+            base + "com.google.android.googlequicksearchbox" else base
+        return withGoogle.filter { isInstalled(it) }
+    }
 
     /**
      * 잠금 중에도 전화 수·발신이 되도록 항상 화이트리스트에 포함하는 통신 필수 패키지.

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,8 +43,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.drawable.toBitmap
 import com.studylock.DateUtil
+import com.studylock.GoogleGuardService
 import com.studylock.Prefs
 import com.studylock.TimetableLoader
 import kotlinx.coroutines.Dispatchers
@@ -146,6 +149,23 @@ fun KioskScreen(
         )
     }
 
+    // 접근성(구글 검색 차단 가드)이 꺼져 있으면 켜라고 안내 — 꺼진 동안엔 구글앱 전체가 막힘
+    var guardOff by remember(refreshKey) { mutableStateOf(!GoogleGuardService.isEnabled(context)) }
+    if (guardOff) {
+        AccessibilityPromptDialog(
+            onGoSettings = {
+                runCatching {
+                    context.startActivity(
+                        android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
+                guardOff = false
+            },
+            onDismiss = { guardOff = false }
+        )
+    }
+
     val ddayText = if (days >= 0) "D-$days" else "D+${-days}"
 
     Box(Modifier.fillMaxSize().background(Paper)) {
@@ -245,6 +265,42 @@ fun KioskScreen(
 
         // ---- TODO(할 일) 우상단 진입점 ----
         TodoIcon(onClick = onOpenTodo, modifier = Modifier.align(Alignment.TopEnd))
+    }
+}
+
+/** 접근성 꺼짐 안내 모달 — 구글 검색 차단 가드를 켜라고 안내 + 설정으로 보내는 버튼 */
+@Composable
+private fun AccessibilityPromptDialog(onGoSettings: () -> Unit, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Paper).padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 방패 글리프
+            Box(
+                Modifier.size(52.dp).clip(CircleShape).background(Ink),
+                contentAlignment = Alignment.Center
+            ) { Text("!", color = Paper, fontSize = 28.sp, fontWeight = FontWeight.Bold) }
+            Spacer(Modifier.height(16.dp))
+            Text("접근성 켜기가 필요해요", color = Ink, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "구글 앱의 ‘검색’ 화면 진입을 막으려면 접근성 권한이 필요해요.\n" +
+                    "꺼져 있으면 Gemini와 검색을 구분할 수 없어, 지금은 구글 앱이 전부 막혀 있어요.\n" +
+                    "켜면 Gemini는 그대로 쓰고 검색만 차단돼요.",
+                color = Gray, fontSize = 13.5.sp, lineHeight = 20.sp, textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(22.dp))
+            Box(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Ink, RoundedCornerShape(14.dp))
+                    .clickable(onClick = onGoSettings).padding(vertical = 15.dp),
+                contentAlignment = Alignment.Center
+            ) { Text("접근성 켜러 가기", color = Paper, fontSize = 15.sp, fontWeight = FontWeight.SemiBold) }
+            Spacer(Modifier.height(6.dp))
+            Text("나중에", color = Gray, fontSize = 14.sp,
+                modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = onDismiss)
+                    .padding(horizontal = 20.dp, vertical = 12.dp))
+        }
     }
 }
 

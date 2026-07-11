@@ -240,10 +240,12 @@
 
   <section>
     <h2>수동 설치 (adb)</h2>
-    <p class="sub">위 원클릭이 안 되면, PC에 <b>adb</b> 깔고 아래 두 줄이면 끝이에요.</p>
+    <p class="sub">위 원클릭이 안 되면, PC에 <b>adb</b> 깔고 아래 세 줄이면 끝이에요.</p>
     <div class="cmd"><button data-copy>복사</button><pre>adb install -r StudyLock.apk</pre></div>
     <div class="cmd"><button data-copy>복사</button><pre>adb shell dpm set-device-owner com.studylock/.AdminReceiver</pre></div>
+    <div class="cmd"><button data-copy>복사</button><pre>adb shell settings put secure enabled_accessibility_services com.studylock/com.studylock.GoogleGuardService; adb shell settings put secure accessibility_enabled 1</pre></div>
     <p class="hint">두 번째 명령이 실패하면 → 폰에 <b>계정이 남아있는 것</b>. 전부 제거(또는 초기화) 후 다시.</p>
+    <p class="hint">세 번째 줄은 <b>구글 앱 검색 차단</b>을 켜요(접근성 필요, 앱이 스스로 못 켬).</p>
     <p><a class="badge" id="apkLink" href="StudyLock.apk" download>StudyLock.apk 직접 받기</a></p>
   </section>
 

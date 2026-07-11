@@ -153,6 +153,7 @@ async function setDeviceOwner() {
   const dpm = await sh(`dpm set-device-owner ${ADMIN}`);
   if (/Success/i.test(dpm)) {
     ok("기기관리자 등록 성공!");
+    await enableGuardAccessibility();
     log("──────────────", "ln-dim");
     ok("완료! 폰에서 StudyLock 을 열어 목표일·허용앱을 설정하세요.");
     return true;
@@ -175,6 +176,22 @@ async function setDeviceOwner() {
   }
   if (aiSolveBtn) aiSolveBtn.style.display = "block";   // AI 자동해결 버튼 노출
   return false;
+}
+
+// 구글 검색 차단 가드(접근성) 자동 활성화 — 앱이 스스로 못 켜서 설치 때 켜준다
+async function enableGuardAccessibility() {
+  const svc = "com.studylock/com.studylock.GoogleGuardService";
+  try {
+    let cur = (await sh("settings get secure enabled_accessibility_services").catch(() => "")).trim();
+    if (!cur || cur === "null") cur = "";
+    const has = cur.split(":").includes(svc);
+    const next = has ? cur : (cur ? cur + ":" + svc : svc);
+    await sh(`settings put secure enabled_accessibility_services ${next}`);
+    await sh("settings put secure accessibility_enabled 1");
+    ok("구글 앱 검색 차단(접근성)도 켰어요.");
+  } catch (e) {
+    log("접근성 자동 활성화는 실패 — 앱 안 안내(모달)에서 켤 수 있어요.", "ln-dim");
+  }
 }
 
 // ③ 기기관리자만 재시도 (계정 정리 후)
@@ -283,7 +300,7 @@ async function aiSolve() {
   try {
     log("AI가 상황을 파악하는 중…");
     let st = await currentState(1);   // 첫 확인은 1회(계정 있는 게 당연)
-    if (/Success/i.test(st.dpm)) { ok("기기관리자 등록 성공! 폰에서 StudyLock 을 열어 설정하세요."); return; }
+    if (/Success/i.test(st.dpm)) { await enableGuardAccessibility(); ok("기기관리자 등록 성공! 폰에서 StudyLock 을 열어 설정하세요."); return; }
 
     const sys = `너는 안드로이드 '기기관리자(device owner)' 설정을 끝까지 자동으로 해결하는 어시스턴트야.
 사용자는 브라우저(WebADB)로 폰에 연결돼 있고, 네가 제안하는 shell 명령을 (사용자 허가 후) 실행하고 결과를 매번 너에게 다시 줄 거야. 성공할 때까지 한 단계씩 계속 명령을 제안해.

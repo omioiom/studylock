@@ -1,7 +1,9 @@
 package com.studylock
 
 import android.accessibilityservice.AccessibilityService
+import android.content.Context
 import android.content.Intent
+import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 
 /**
@@ -45,5 +47,16 @@ class GoogleGuardService : AccessibilityService() {
         private const val GOOGLE_APP = "com.google.android.googlequicksearchbox"
         // 이 클래스명이 걸리면 '구글 검색/구글앱' 탈출로 보고 튕긴다. 그 외(게이트웨이·어시스턴트)는 통과.
         private val BLOCK = listOf("SearchActivity", "GoogleAppActivity")
+
+        /** 이 접근성 서비스가 실제로 켜져 있나 (설정의 enabled 목록에 우리 컴포넌트가 있나) */
+        fun isEnabled(context: Context): Boolean {
+            val flat = Settings.Secure.getString(
+                context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            ) ?: return false
+            val pkg = context.packageName
+            val full = "$pkg/$pkg.GoogleGuardService"
+            val short = "$pkg/.GoogleGuardService"
+            return flat.split(":").any { it.equals(full, true) || it.equals(short, true) }
+        }
     }
 }
