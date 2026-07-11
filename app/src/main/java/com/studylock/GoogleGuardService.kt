@@ -23,8 +23,9 @@ class GoogleGuardService : AccessibilityService() {
         if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         if (event.packageName?.toString() != GOOGLE_APP) return
 
-        // 잠금 중이 아니면(=완전 해제/셋업 전) 감시하지 않음
-        if (!Prefs(this).locked) return
+        // 잠금 중이 아니거나(셋업 전/완전 해제), 임시·전체 해제 시간 중이면 감시 안 함(그땐 폰 자유)
+        val prefs = Prefs(this)
+        if (!prefs.locked || prefs.tempUnlockActive()) return
 
         val cls = event.className?.toString().orEmpty()
         // 알려진 '구글 검색/구글앱 홈' 화면만 튕긴다. 게이트웨이·어시스턴트(Gemini) 등은 전부 통과.
